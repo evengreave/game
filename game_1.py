@@ -9,15 +9,15 @@ from pygame.locals import *
 # variable setting
 units = []
 buildings = []
+items = []
 
 # Pygame Setting
 pygame.init()
-DISPLAYSURF = pygame.display.set_mode((1200,800),0,32)
+DISPLAYSURF = pygame.display.set_mode((1200,900),0,32)
 pygame.display.set_caption('Game')
 fpsClock = pygame.time.Clock()
 BASICFONTSIZE = 16
 BASICFONT = pygame.font.Font('freesansbold.ttf', BASICFONTSIZE)
-
 
 # Color Setting
 BLACK = (0,0,0)
@@ -30,135 +30,213 @@ DARKGRAY = (100, 100, 100)
 GRAY = (140,140,140)
 WHITEGRAY = (200,200,200)
 
+# initial variable setting
+scene = 1
+interface = 1
+triggerlist = []
+FPS = 20
+
+# game state
+state = 1 # start memu
+interface = 1 # ordinary map
+
 class unit:
 	name = ''
-	# stat
-	hp = (0,0)
-	mp = (0,0)
-	sp = (0,0)
-	exp = (0,0)
-	speed = 0
+	num = 0
+	# Position
+	position = [0,0,0]
 
-	# inventory
+	# BuildingStat
+	BuildingStat = 0
+	# CraftingStat
+	CraftingStat = 0
+	# CombatStat
+	CombatStat = {'hp' : [0,0], 'atk': 0, 'atkspeed': 0, 'atkrange': 0, 'speed': 0}
+
+	# Aura
+	BuildingAura = 0
+	CraftingAura = 0
+	CombatAura = 0
+	AuraRange = 0
+	# Item
 	inventory = []
-	inventorylimit = (0,0) # weight, volume
-	inventorylock = -1 # only me
 
-	# state
-	position = (0,0,0) # x,y,r. if r is 0, on collision
-	direction = 0
-	action = 0
+	# Image
+	imagePath = ''
 
-	# passive skill
-	def passiveskill():
+	# Allowed Action. Based on Player`s Command.
+	# Treat about action only influence to world`s state.
+
+	def move():
 		pass
 
-	# active skill
-	
-	def generate():
+	def attack():
 		pass
 
-	def load():
+	def equip():
 		pass
+
+	def craft():
+		pass
+
+	def build():
+		pass
+
+	def generate(self):
+		self.name = 'moon' # need to modify
+
+		# basic stat setting
+		self.position = [600,400,30]
+		self.BuildingStat = 5
+		self.CraftingStat = 5
+		self.CombatStat['hp'] = [100,100]
+		self.CombatStat['atk'] = 5
+		self.atkspeed = 0.5
+		self.atkrange = 50
+		self.speed = 150
+
+		# aura
+		self.BuildingAura = 0
+		self.CraftingAura = 0
+		self.CombatAura = 0
+		self.AuraRange = 100
+
+		# inventory
+		self.inventory = []
+
 
 class building:
 	name = ''
-	# stat
+	num = 0
+	# position
+	position = (0,0,0,0)
+
+	# hp
 	hp = (0,0)
-
-	# inventory
+	atk = 0
+	atkspeed = 0
+	atkrange = 0
+	# Aura
+	BuildingAura = 0
+	CraftingAura = 0
+	CombatAura = 0
+	AuraRange = 0
+	# unit
+	presense = []
+	# item
 	inventory = []
-	inventorylimit = (0,0) # weight, volume
-	inventorylock = -1 # only me
 
-	# state
-	position = (0,0,0,0) # x,y,width,height
+	# Allowed Action. Based on Player`s Command.
+	# Treat about action only influence to world`s state.
 
-	def generate():
+	def attack():
+		pass
+	def train():
 		pass
 
+class item:
+	name = ''
+	num = 0
+	# position
+	position = (0,0)
+	# hp 
+	hp = (0,0)
+	# stat
+	BuildingBonus = 0
+	CraftingBonus = 0
+	hpBonus = 0
+	mpBonus = 0
+	spBonus = 0
 
-def loaddata():
-	f1 = open("./data/units.txt", "r")
-	f2 = open("./data/buildings.txt", "r")
+	# Aura Bonus
+	BuildingAuraBonus = 0
+	CraftingAuraBonus = 0
+	CombatAuraBonus = 0
 
-	# read units
-	# data format = hp, mp, sp, exp, speed, inventory, inventorylimit, inventorylock, position, direction, action
-	while True:
-		line = f1.readline()
-		if not line: break
-		token = line.split(' ')
-		name = token[0]
-		hp = (int(token[1]), int(token[2]))
-		mp = (int(token[3]), int(token[4]))
-		sp = (int(token[5]), int(token[6]))
-		exp = (int(token[7]), int(token[8]))
-		speed = int(token[9])
-
-		# parse inventory
-		temp = token[10].split(',')
-		inventory = []
-		for i in temp:
-			inventory.append(int(i))
-
-		inventorylimit = list((int(token[11]), int(token[12])))
-		inventorylock = int(token[13])
-
-		position = list((int(token[14]), int(token[15]), int(token[16])))
-		direction = int(token[17])
-		action = int(token[18])
-
-		units.append((hp, mp, sp, exp, speed, temp, inventory, inventorylimit, inventorylock, position, direction, action))
-
-
-	# read buildings
-	# data format = hp, inventory, inventorylimit, inventorylock, position
-	while True:
-		line = f2.readline()
-		if not line: break
-		token = line.split(' ')
-		name = token[0]
-		hp = (int(token[1]), int(token[2]))
-		temp = token[3].split(',')
-		inventory = []
-		for i in temp:
-			inventory.append(int(temp))
-
-		inventorylimit = (int(token[4]), int(token[5]))
-		inventorylock = int(token[6])
-		position = (int(token[7]), int(token[8]), int(token[9]), int(token[10]))
-
-		buildings.append((hp, inventory, inventorylimit, inventorylock, position))
 
 
 
 def start():
-	loaddata()
+	pass
 
 def drawmap():
+	global triggerlist, scene
+	triggerlist = []
 
-	DISPLAYSURF.fill(BLACK)
+	if scene == 1:
+		# start scene
 
-	# display map
+		DISPLAYSURF.fill(BLACK)
+		# display map
 
-	# for testing
-	textSurf = BASICFONT.render('Hello World!', True, WHITE)
-	textRect = textSurf.get_rect()
-	textRect.topleft = (40, 40)
-	DISPLAYSURF.blit(textSurf,textRect)
+		# for testing
+		triggerlist.append((440, 240, 60, 20, 1, 0))
+		textSurf = BASICFONT.render('New Game', True, WHITE)
+		textRect = textSurf.get_rect()
+		textRect.topleft = (440, 240)
+		DISPLAYSURF.blit(textSurf,textRect)
 
-	# testing end
+		triggerlist.append((440, 340, 60, 20, 2, 0))
+		textSurf = BASICFONT.render('Load Game', True, WHITE)
+		textRect = textSurf.get_rect()
+		textRect.topleft = (440, 340)
+		DISPLAYSURF.blit(textSurf,textRect)
 
-	# draw building
-	for i in buildings:
-		pass
-	# draw unit
-	for i in units:
-		 pygame.draw.circle(DISPLAYSURF, SKYBLUE, (i[9][0],i[9][1]), i[9][2])
+		triggerlist.append((440, 440, 60, 20, 3, 0))
+		textSurf = BASICFONT.render('Options', True, WHITE)
+		textRect = textSurf.get_rect()
+		textRect.topleft = (440, 440)
+		DISPLAYSURF.blit(textSurf,textRect)
 
-	pygame.display.update()
+		# testing end
+
+		# draw building
+		for i in buildings:
+			pass
+		# draw unit
+		for i in units:
+			pygame.draw.circle(DISPLAYSURF, SKYBLUE, (i.position[0], i.position[1]), i.position[2])
+
+		pygame.display.update()
+
+	elif scene == 2:
+		# main game scene
+		DISPLAYSURF.fill(BLACK)
+		
+		# draw structure
+		pygame.draw.line(DISPLAYSURF, GRAY, (0, 650), (1200, 650))
+		pygame.draw.line(DISPLAYSURF, GRAY, (250, 650), (250, 900))
+		pygame.draw.line(DISPLAYSURF, GRAY, (950, 650), (950, 900))
+		
+
+		# draw the terrain. into (0,0) ~ (1200, 650)
+		image = pygame.image.load('./data/image/terrain/water_3.jpg')
+		image = pygame.transform.scale(image, (50, 50))
+		
+		for i in range(24):
+			for j in range(13):
+				DISPLAYSURF.blit(image, (i*50,j*50))
+
+		pygame.display.update()
+
+
+def processfunction(func, argument):
+	global units, buildings, items, triggerlist, scene
+
+	if func == 1:
+		# start page
+		# generate user character
+		myCharacter = unit()
+		myCharacter.generate()
+		units.append(myCharacter)
+
+		scene = 2
+
+
+
 
 def processinput():
+	global triggerlist
 
 	mousex = 0
 	mousey = 0
@@ -169,26 +247,24 @@ def processinput():
 			pygame.quit()
 			sys.exit()
 		elif event.type == MOUSEMOTION:
-			mousex = event.pos[0]
-			mousey = event.pos[1]
-			mouseClicked = True
+			mousex, mousey = event.pos
 		elif event.type == MOUSEBUTTONUP:
-			mousex = event.pos[0]
-			mousey = event.pos[1]
+			mousex, mousey = event.pos
 			mouseClicked = True
-		# Process Keyboard Input
 
 	if mouseClicked == True:
 		# process event if mouse cursor in event range
-		
-		units[0][9][0] = mousex
-		units[0][9][1] = mousey
+		for trigger in triggerlist:
+			if mousex > trigger[0] and mousex < trigger[0] + trigger[2] and mousey > trigger[1] and mousey < trigger[1] + trigger[3]:
+				processfunction(trigger[4], trigger[5])
+		return (0,0)
 
 def processaction():
 	for i in units:
 		pass
 	for i in buildings:
 		pass
+
 
 def mainloop():
 	while True:
